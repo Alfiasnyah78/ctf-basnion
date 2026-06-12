@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>BASNION — SMK Harapan Bangsa CTF Community</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      min-height: 100vh;
+      font-family: 'Share Tech Mono', monospace;
+      color: #00ff41;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ── Background Effects ── */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,255,65,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,255,65,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .scan-line {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(transparent 50%, rgba(0,255,65,0.015) 50%);
+      background-size: 100% 4px;
+      pointer-events: none;
+      z-index: 0;
+      animation: scanMove 8s linear infinite;
+    }
+
+    @keyframes scanMove {
+      0%   { background-position: 0 0; }
+      100% { background-position: 0 100px; }
+    }
+
+    .hex-deco {
+      position: fixed;
+      opacity: 0.03;
+      font-size: 220px;
+      color: #00ff41;
+      pointer-events: none;
+      user-select: none;
+      font-family: monospace;
+      z-index: 0;
+    }
+    .hex-deco.left  { left: -30px; top: 40%; transform: translateY(-50%); }
+    .hex-deco.right { right: -30px; top: 60%; transform: translateY(-50%); }
+
+    /* ── Layout ── */
+    .content {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem 3rem;
+    }
+
+    /* ── Top Bar ── */
+    .top-bar {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 1.5rem;
+      border-bottom: 1px solid rgba(0,255,65,0.15);
+      font-size: 11px;
+      color: rgba(0,255,65,0.5);
+      margin-bottom: 1rem;
+    }
+
+    .blink {
+      animation: blink 1.2s step-end infinite;
+    }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    /* ── Logo Section ── */
+    .logo-wrap {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 340px;
+      height: 340px;
+      margin: 0.5rem 0 1.5rem;
+    }
+
+    .logo-ring {
+      position: absolute;
+      width: 340px;
+      height: 340px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,255,65,0.12);
+      animation: rotateSlow 20s linear infinite;
+    }
+    .logo-ring::before {
+      content: '';
+      position: absolute;
+      top: -4px; left: -4px; right: -4px; bottom: -4px;
+      border-radius: 50%;
+      border: 1px dashed rgba(0,255,65,0.07);
+    }
+
+    .logo-ring-inner {
+      position: absolute;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      border: 1px solid rgba(0,255,65,0.08);
+      animation: rotateSlow 12s linear infinite reverse;
+    }
+
+    @keyframes rotateSlow {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    /* Corner decorations */
+    .corner-deco {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: rgba(0,255,65,0.4);
+      border-style: solid;
+    }
+    .corner-deco.tl { top: 8px;  left: 8px;  border-width: 2px 0 0 2px; }
+    .corner-deco.tr { top: 8px;  right: 8px; border-width: 2px 2px 0 0; }
+    .corner-deco.bl { bottom: 8px; left: 8px;  border-width: 0 0 2px 2px; }
+    .corner-deco.br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+    .logo-img {
+      width: 240px;
+      height: 240px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 20px rgba(0,255,65,0.3));
+      animation: logoPulse 3s ease-in-out infinite;
+      position: relative;
+      z-index: 5;
+    }
+    @keyframes logoPulse {
+      0%,100% { filter: drop-shadow(0 0 18px rgba(0,255,65,0.25)); }
+      50%      { filter: drop-shadow(0 0 35px rgba(0,255,65,0.55)); }
+    }
+
+    /* Logo fallback (shown if image fails to load) */
+    .logo-fallback {
+      display: none;
+      width: 200px;
+      height: 200px;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 28px;
+      font-weight: 900;
+      color: #00ff41;
+      text-align: center;
+      border: 2px solid rgba(0,255,65,0.3);
+      border-radius: 50%;
+      position: relative;
+      z-index: 5;
+    }
+
+    /* ── Title Block ── */
+    .title-block {
+      text-align: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .pre-title {
+      font-size: 11px;
+      letter-spacing: 5px;
+      color: rgba(0,255,65,0.5);
+      margin-bottom: 0.5rem;
+    }
+
+    .main-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 48px;
+      font-weight: 900;
+      color: #ffffff;
+      text-shadow: 0 0 30px rgba(0,255,65,0.4), 0 0 60px rgba(0,255,65,0.15);
+      letter-spacing: 8px;
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+
+    .sub-title {
+      font-size: 13px;
+      letter-spacing: 3px;
+      color: rgba(0,255,65,0.65);
+    }
+
+    /* ── Terminal Box ── */
+    .terminal-box {
+      background: rgba(0,255,65,0.03);
+      border: 1px solid rgba(0,255,65,0.2);
+      border-radius: 6px;
+      padding: 2rem 1.5rem 1rem;
+      font-size: 12px;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .terminal-titlebar {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      padding: 6px 12px;
+      border-bottom: 1px solid rgba(0,255,65,0.1);
+      font-size: 10px;
+      color: rgba(0,255,65,0.3);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .terminal-dots {
+      display: flex;
+      gap: 5px;
+    }
+    .terminal-dots span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(0,255,65,0.2);
+      display: block;
+    }
+
+    .terminal-lines {
+      line-height: 1.9;
+      color: rgba(0,255,65,0.8);
+    }
+
+    .t-prompt { color: rgba(0,255,65,0.35); }
+    .t-cmd    { color: #00ff41; }
+    .t-out    { color: rgba(0,255,65,0.55); padding-left: 14px; }
+    .t-flag   { color: #ffffff; padding-left: 14px; font-weight: bold; }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 500px;
+      margin-bottom: 1.5rem;
+    }
+
+    .stat-card {
+      border: 1px solid rgba(0,255,65,0.15);
+      border-radius: 6px;
+      padding: 0.9rem 0.5rem;
+      text-align: center;
+      background: rgba(0,255,65,0.02);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .stat-card:hover {
+      border-color: rgba(0,255,65,0.35);
+      background: rgba(0,255,65,0.04);
+    }
+
+    .stat-val {
+      font-family: 'Orbitron', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #00ff41;
+      display: block;
+    }
+
+    .stat-lbl {
+      font-size: 9px;
+      color: rgba(0,255,65,0.4);
+      letter-spacing: 2px;
+      display: block;
+      margin-top: 3px;
+    }
+
+    /* ── Buttons ── */
+    .btn-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .btn-primary {
+      background: #00ff41;
+      color: #0a0a0a;
+      border: none;
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      padding: 13px 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+    .btn-primary:hover {
+      background: #ffffff;
+      box-shadow: 0 0 24px rgba(0,255,65,0.5);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: #00ff41;
+      border: 1px solid rgba(0,255,65,0.4);
+      font-family: 'Orbitron', sans-serif;
+      font-size: 12px;
+      letter-spacing: 3px;
+      padding: 13px 32px;
+      border-radius: 4px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-block;
+      transition: all 0.2s;
+    }
+    .btn-secondary:hover {
+      border-color: #00ff41;
+      background: rgba(0,255,65,0.07);
+      transform: translateY(-1px);
+    }
+
+    /* ── Social Links ── */
+    .social-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .social-link {
+      width: 38px;
+      height: 38px;
+      border: 1px solid rgba(0,255,65,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: rgba(0,255,65,0.55);
+      text-decoration: none;
+      font-size: 17px;
+      transition: all 0.2s;
+    }
+    .social-link:hover {
+      border-color: #00ff41;
+      color: #00ff41;
+      background: rgba(0,255,65,0.05);
+      box-shadow: 0 0 10px rgba(0,255,65,0.2);
+    }
+
+    /* ── Footer ── */
+    .footer-txt {
+      font-size: 10px;
+      color: rgba(0,255,65,0.2);
+      text-align: center;
+      letter-spacing: 2px;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 480px) {
+      .main-title { font-size: 32px; letter-spacing: 5px; }
+      .logo-img { width: 180px; height: 180px; }
+      .logo-wrap { width: 280px; height: 280px; }
+      .logo-ring { width: 280px; height: 280px; }
+      .logo-ring-inner { width: 210px; height: 210px; }
+      .top-bar { font-size: 10px; padding: 0.5rem 1rem; }
+      .hex-deco { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background layers -->
+  <div class="grid-bg"></div>
+  <div class="scan-line"></div>
+  <div class="hex-deco left">0x</div>
+  <div class="hex-deco right">/></div>
+
+  <div class="content">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <span>root@harbas:~# <span class="blink">_</span></span>
+      <span id="clock">--:--:--</span>
+      <span>STATUS: <span style="color:#00ff41">ONLINE</span></span>
+    </div>
+
+    <!-- Logo -->
+    <div class="logo-wrap">
+      <div class="logo-ring"></div>
+      <div class="logo-ring-inner"></div>
+      <div class="corner-deco tl"></div>
+      <div class="corner-deco tr"></div>
+      <div class="corner-deco bl"></div>
+      <div class="corner-deco br"></div>
+      <!--
+        Ganti src di bawah ini dengan path logo kamu di CTFd.
+        Contoh: src="/files/4285b929c772956a378ed46706e5aacc/basnion-logo.png.png"
+      -->
+      <img
+        class="logo-img"
+        src="/files/4285b929c772956a378ed46706e5aacc/basnion-logo.png.png"
+        alt="BASNION Logo"
+        onerror="this.style.display='none'; document.getElementById('logo-fallback').style.display='flex';"
+      />
+      <div id="logo-fallback" class="logo-fallback">BAS<br>NION</div>
+    </div>
+
+    <!-- Title -->
+    <div class="title-block">
+      <div class="pre-title">▸ HARBAS ONION ◂</div>
+      <h1 class="main-title">BASNION</h1>
+      <div class="sub-title">SMK HARAPAN BANGSA &middot; CTF COMMUNITY</div>
+    </div>
+
+    <!-- Terminal -->
+    <div class="terminal-box">
+      <div class="terminal-titlebar">
+        <div class="terminal-dots">
+          <span></span><span></span><span></span>
+        </div>
+        root@harbas:~
+      </div>
+      <div class="terminal-lines">
+        <div><span class="t-prompt">$</span> <span class="t-cmd">./start_ctf.sh --mode competitive</span></div>
+        <div class="t-out">[+] Loading challenges...</div>
+        <div class="t-out">[+] Connecting to server...</div>
+        <div class="t-out">[+] Environment ready</div>
+        <div class="t-flag">[✓] basnion{w3lc0m3_t0_b4sn10n_ctf}</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <!-- Ganti angka 42, 128, 7 sesuai data CTF kamu -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <span class="stat-val" id="stat-challenges">0</span>
+        <span class="stat-lbl">CHALLENGES</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-teams">0</span>
+        <span class="stat-lbl">TEAMS</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="stat-categories">0</span>
+        <span class="stat-lbl">CATEGORIES</span>
+      </div>
+    </div>
+
+    <!-- CTA Buttons -->
+    <div class="btn-row">
+      <a href="/login" class="btn-primary">LOGIN</a>
+      <a href="/register" class="btn-secondary">REGISTER</a>
+    </div>
+
+    <!-- Social Links -->
+    <!-- Ganti href dengan link sosmed tim kamu -->
+    <div class="social-row">
+      <a href="https://twitter.com/ctfdio" class="social-link" aria-label="Twitter">
+        <i class="ti ti-brand-twitter" aria-hidden="true"></i>
+      </a>
+      <a href="https://github.com/ctfd" class="social-link" aria-label="GitHub">
+        <i class="ti ti-brand-github" aria-hidden="true"></i>
+      </a>
+      <a href="https://instagram.com" class="social-link" aria-label="Instagram">
+        <i class="ti ti-brand-instagram" aria-hidden="true"></i>
+      </a>
+      <a href="https://discord.com" class="social-link" aria-label="Discord">
+        <i class="ti ti-brand-discord" aria-hidden="true"></i>
+      </a>
+    </div>
+
+    <div class="footer-txt">&copy; 2026 BASNION &middot; SMK HARAPAN BANGSA &middot; CTF COMMUNITY &middot; POWERED BY CTFd</div>
+
+  </div>
+
+  <script>
+    // ── Live Clock ──
+    function updateClock() {
+      const now = new Date();
+      const h = String(now.getHours()).padStart(2, '0');
+      const m = String(now.getMinutes()).padStart(2, '0');
+      const s = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('clock').textContent = h + ':' + m + ':' + s;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // ── Count-up Animation ──
+    function countUp(el, target, duration) {
+      let start = 0;
+      const step = Math.ceil(target / (duration / 50));
+      const timer = setInterval(function () {
+        start = Math.min(start + step, target);
+        el.textContent = start;
+        if (start >= target) clearInterval(timer);
+      }, 50);
+    }
+
+    // Jalankan setelah halaman load
+    // Ganti 42, 128, 7 dengan angka yang sesuai
+    window.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        countUp(document.getElementById('stat-challenges'), 1, 1000);
+        countUp(document.getElementById('stat-teams'),      0, 1200);
+        countUp(document.getElementById('stat-categories'), 1,  800);
+      }, 500);
+    });
+  </script>
+</body>
+</html>
+
+<--! CTFD index pages !-->
